@@ -19,18 +19,32 @@ export const AuthContextProvider = ({ children }) => {
             console.log('login event occured')
         })
 
+        netlifyIdentity.on('logout', () => {
+            setUser(null);
+            console.log('logout event occured')
+        })
+
+
         // init netlify identity connection
         netlifyIdentity.init();
+        return () => {
+            netlifyIdentity.off('login');
+            netlifyIdentity.off('logout');
+        }
     }, []);
 
     const [user, setUser] = useState(null);
     const login = () => {
         netlifyIdentity.open() //its open up an modal
     }
+    const logout = () => {
+        netlifyIdentity.logout()
+    }
     // create one bundle for all of props to pass them down trough global context:
     const context = {
         user: user,
-        login: login
+        login: login,
+        logout: logout
     }
     return (
         <AuthContext.Provider value={context}>
