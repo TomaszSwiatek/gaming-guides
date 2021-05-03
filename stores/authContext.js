@@ -11,15 +11,29 @@ const AuthContext = createContext({
 // this is react component
 // this prop "children"represents whatever this component wrapps ( here in _app component)
 export const AuthContextProvider = ({ children }) => {
-
-    const [user, setUser] = useState(null);
-
     useEffect(() => {
+        // this listening for any user that signed/logged in -> and we grab data of this user automagically.
+        netlifyIdentity.on('login', (user) => {
+            setUser(user);
+            netlifyIdentity.close();
+            console.log('login event occured')
+        })
+
         // init netlify identity connection
         netlifyIdentity.init();
     }, []);
+
+    const [user, setUser] = useState(null);
+    const login = () => {
+        netlifyIdentity.open() //its open up an modal
+    }
+    // create one bundle for all of props to pass them down trough global context:
+    const context = {
+        user: user,
+        login: login
+    }
     return (
-        <AuthContext.Provider value={user}>
+        <AuthContext.Provider value={context}>
             {children}
         </AuthContext.Provider> //this wrapps out entire app
     )
