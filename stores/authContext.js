@@ -11,6 +11,8 @@ const AuthContext = createContext({
 // this is react component
 // this prop "children"represents whatever this component wrapps ( here in _app component)
 export const AuthContextProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [authReady, setAuthReady] = useState(false);
     useEffect(() => {
         // this listening for any user that signed/logged in -> and we grab data of this user automagically.
         netlifyIdentity.on('login', (user) => {
@@ -18,22 +20,26 @@ export const AuthContextProvider = ({ children }) => {
             netlifyIdentity.close();
             console.log('login event occured')
         })
-
         netlifyIdentity.on('logout', () => {
             setUser(null);
             console.log('logout event occured')
         })
-
+        // event occurs on netlify initialization
+        netlifyIdentity.on('init', (user) => {
+            setUser(user);
+            setAuthReady(true);
+            console.log('init event occured')
+        })
 
         // init netlify identity connection
         netlifyIdentity.init();
+        // we unregister (unsub) eventhandlers when component is unmount (that is when useEffect return a value):
         return () => {
             netlifyIdentity.off('login');
             netlifyIdentity.off('logout');
         }
     }, []);
 
-    const [user, setUser] = useState(null);
     const login = () => {
         netlifyIdentity.open() //its open up an modal
     }
@@ -44,7 +50,8 @@ export const AuthContextProvider = ({ children }) => {
     const context = {
         user: user,
         login: login,
-        logout: logout
+        logout: logout,
+        authReady: authReady
     }
     return (
         <AuthContext.Provider value={context}>
